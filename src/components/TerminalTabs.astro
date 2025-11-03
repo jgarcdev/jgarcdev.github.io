@@ -1,0 +1,143 @@
+---
+const { activeTab = 'Home' } = Astro.props;
+const tabs = ['Home', 'Projects', 'Blog', 'Resume'];
+const tabLinks = {
+  Home: '/',
+  Projects: '/projects',
+  Blog: '/blog',
+  Resume: '/resume',
+};
+
+let currentTabIndex = tabs.indexOf(activeTab);
+
+function gotoTab(index: number) {
+  if (index >= 0 && index < tabs.length) {
+    window.location.href = tabLinks[tabs[index] as keyof typeof tabLinks];
+  }
+}
+
+if (typeof window !== "undefined") {
+  console.log("If");
+  window.addEventListener("keydown", event => {
+    console.log(event.key);
+    if (event.key === "ArrowRight") {
+      console.log("ArrowRight");
+      gotoTab((currentTabIndex + 1) % tabs.length);
+    } else if (event.key === "ArrowLeft") {
+      console.log("ArrowLeft");
+      gotoTab((currentTabIndex - 1 + tabs.length) % tabs.length);
+    }
+  });
+
+  let touchStartX: number | null = null;
+  window.addEventListener("touchstart", event => {
+    touchStartX = event.touches[0].clientX;
+  });
+  window.addEventListener("touchend", event => {
+    if (touchStartX === null) return;
+    const touchEndX = event.changedTouches[0].clientX;
+    const diff = touchEndX - touchStartX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) {
+        gotoTab((currentTabIndex - 1 + tabs.length) % tabs.length);
+      } else {
+        gotoTab((currentTabIndex + 1) % tabs.length);
+      }
+      touchStartX = null;
+    }
+  });
+}
+---
+<style>
+body {
+  background: #181818 !important;
+}
+.terminal {
+  background: #181818;
+  color: #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 24px #000a;
+  font-family: 'Fira Mono', 'Consolas', monospace;
+  padding: 0;
+  min-height: 97vh;
+  max-width: 2000px;
+  /* margin: 0rem auto; */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.terminal-header {
+  background: #222;
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid #333;
+}
+.terminal-tabs {
+  display: flex;
+  gap: 1rem;
+  margin-left: 1rem;
+}
+.tab {
+  padding: 0.25rem 1rem;
+  border-radius: 4px 4px 0 0;
+  background: #222;
+  color: #aaa;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  font-size: 1rem;
+  transition: background 0.2s, color 0.2s;
+}
+.tab.active {
+  background: #181818;
+  color: #e0e0e0;
+  font-weight: bold;
+  border-bottom: 2px solid #b0120f;
+}
+.terminal-body {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  max-height: 75vh;
+  scrollbar-width: thin;
+  scrollbar-color: #b0120f #222;
+}
+.terminal-body::-webkit-scrollbar {
+  width: 8px;
+}
+.terminal-body::-webkit-scrollbar-thumb {
+  background: #b0120f;
+  border-radius: 4px;
+}
+.terminal-body::-webkit-scrollbar-track {
+  background: #222;
+}
+.circle {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  margin-right: 6px;
+  margin-left: 0;
+  vertical-align: middle;
+}
+.circle.green { background: #00ff99; }
+.circle.yellow { background: #ffcc00; }
+.circle.red { background: #ff5555; }
+</style>
+<div class="terminal">
+  <div class="terminal-header">
+    <span style="margin-right: 1rem; color: #b0120f; font-weight: bold;">
+      @jgarcia.dev
+    </span>
+    <div class="terminal-tabs">
+      {tabs.map(tab => (
+        <a href={tabLinks[tab as keyof typeof tabLinks]} class={`tab${activeTab === tab ? ' active' : ''}`}>{tab}</a>
+      ))}
+    </div>
+  </div>
+  <div class="terminal-body">
+    <slot />
+  </div>
+</div>
