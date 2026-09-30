@@ -3,7 +3,7 @@ import { defineConfig } from 'astro/config';
 
 // https://astro.build/config
 export default defineConfig({
-	site: "https://jgarcia.github.io",
+	site: "https://jgarcdev.github.io",
 	markdown: {
 		shikiConfig: {
 			theme: 'rose-pine',
