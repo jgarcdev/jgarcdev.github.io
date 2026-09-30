@@ -1,0 +1,323 @@
+---
+import { render, type CollectionEntry } from 'astro:content';
+import { formatDate } from '../lib/content';
+
+interface Props {
+	piece: CollectionEntry<'compositions'>;
+}
+
+const { piece } = Astro.props;
+const { title, description, date, instrumentation, duration, audio } = piece.data;
+// markdown body = program notes; only shown when the file has one
+const hasNotes = Boolean(piece.body?.trim());
+const { Content } = await render(piece);
+
+const BARS = 56;
+let seed = [...piece.id].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7);
+const rand = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 2 ** 32);
+const heights = Array.from({ length: BARS }, (_, i) => {
+	const envelope = Math.sin((Math.PI * (i + 0.5)) / BARS) * 0.65 + 0.35;
+	return Math.round((0.25 + rand() * 0.75) * envelope * 100);
+});
+const W = BARS * 5;
+---
+
+<article class="piece" data-player>
+	<header>
+		<div>
+			<h3>{title}</h3>
+			<p class="meta mono">
+				<time datetime={date.toISOString()}>{formatDate(date)}</time>
+				{instrumentation && <span> · {instrumentation}</span>}
+				{duration && <span> · {duration}</span>}
+			</p>
+		</div>
+	</header>
+
+	<p class="muted desc">{description}</p>
+
+	{audio ? (
+		<div class="player">
+			<audio src={audio} preload="metadata"></audio>
+			<button type="button" class="play" aria-label={`Play preview of ${title}`} data-play>
+				<svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z" /></svg>
+				<svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h4v16H6zM14 4h4v16h-4z" /></svg>
+			</button>
+			<div class="wave" data-seek role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+				{['base', 'fill'].map((layer) => (
+					<svg class={`bars ${layer}`} viewBox={`0 0 ${W} 100`} preserveAspectRatio="none" aria-hidden="true">
+						{heights.map((h, i) => (
+							<rect x={i * 5 + 1} y={(100 - h) / 2} width="3" height={h} rx="1" />
+						))}
+					</svg>
+				))}
+			</div>
+			<span class="time mono" data-time>0:00</span>
+		</div>
+	) : (
+		<p class="pending mono">// preview not yet mapped - add `audio` to frontmatter</p>
+	)}
+
+	{hasNotes && (
+		<details class="notes">
+			<summary class="mono">
+				<span class="chevron" aria-hidden="true">&gt;</span>
+				<span class="label-closed">composition notes</span>
+				<span class="label-open">hide notes</span>
+			</summary>
+			<div class="notes-body prose">
+				<Content />
+			</div>
+		</details>
+	)}
+</article>
+
+<script>
+	const fmt = (s: number) => `${Math.floor(s / 60)}:${Math.floor(s % 60).toString().padStart(2, '0')}`;
+
+	document.querySelectorAll<HTMLElement>('[data-player]').forEach((root) => {
+		const audio = root.querySelector('audio');
+		const play = root.querySelector<HTMLButtonElement>('[data-play]');
+		const seek = root.querySelector<HTMLElement>('[data-seek]');
+		const time = root.querySelector<HTMLElement>('[data-time]');
+		if (!audio || !play || !seek || !time) return;
+
+		const update = () => {
+			const pct = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
+			root.style.setProperty('--progress', `${pct}%`);
+			seek.setAttribute('aria-valuenow', pct.toFixed(0));
+			time.textContent = fmt(audio.currentTime);
+		};
+
+		play.addEventListener('click', () => {
+			if (audio.paused) {
+				document.querySelectorAll('audio').forEach((a) => a !== audio && a.pause());
+				audio.play();
+			} else {
+				audio.pause();
+			}
+		});
+
+		audio.addEventListener('play', () => root.classList.add('playing'));
+		audio.addEventListener('pause', () => root.classList.remove('playing'));
+		audio.addEventListener('ended', () => root.classList.remove('playing'));
+		audio.addEventListener('timeupdate', update);
+		audio.addEventListener('loadedmetadata', () => (time.textContent = fmt(audio.duration)));
+
+		seek.addEventListener('click', (e) => {
+			if (!audio.duration) return;
+			const rect = seek.getBoundingClientRect();
+			audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
+			update();
+		});
+
+		seek.addEventListener('keydown', (e) => {
+			if (!audio.duration) return;
+			if (e.key === 'ArrowRight') audio.currentTime = Math.min(audio.duration, audio.currentTime + 5);
+			else if (e.key === 'ArrowLeft') audio.currentTime = Math.max(0, audio.currentTime - 5);
+			else return;
+			e.preventDefault();
+			update();
+		});
+	});
+</script>
+
+<style>
+	.piece {
+		--progress: 0%;
+		display: flex;
+		flex-direction: column;
+		gap: 0.9rem;
+		padding: 1.25rem;
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-left: 2px solid var(--purple);
+		border-radius: var(--radius);
+	}
+
+	.piece.playing {
+		border-left-color: var(--red);
+		box-shadow: -6px 0 24px -12px var(--red);
+	}
+
+	h3 {
+		margin: 0 0 0.2rem;
+	}
+
+	.meta {
+		margin: 0;
+		font-size: 0.75rem;
+		color: var(--text-dim);
+	}
+
+	.desc {
+		margin: 0;
+		font-size: 0.95rem;
+	}
+
+	.player {
+		display: grid;
+		grid-template-columns: auto 1fr auto;
+		align-items: center;
+		gap: 0.9rem;
+		padding: 0.6rem 0.75rem;
+		background: var(--bg);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+	}
+
+	.play {
+		display: grid;
+		place-items: center;
+		width: 2.4rem;
+		height: 2.4rem;
+		padding: 0;
+		border: 1px solid var(--red);
+		border-radius: 50%;
+		background: rgb(227 38 63 / 0.1);
+		color: var(--red-hi);
+		cursor: pointer;
+		transition: box-shadow 0.15s ease, background 0.15s ease;
+	}
+
+	.play:hover {
+		background: rgb(227 38 63 / 0.22);
+		box-shadow: var(--glow-red);
+	}
+
+	.play svg {
+		width: 1rem;
+		height: 1rem;
+		fill: currentColor;
+	}
+
+	.icon-pause,
+	.playing .icon-play {
+		display: none;
+	}
+
+	.playing .icon-pause {
+		display: block;
+	}
+
+	.wave {
+		position: relative;
+		height: 2.6rem;
+		cursor: pointer;
+	}
+
+	.bars {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+	}
+
+	.bars.base rect {
+		fill: var(--border-hi);
+	}
+
+	.bars.fill {
+		clip-path: inset(0 calc(100% - var(--progress)) 0 0);
+	}
+
+	.bars.fill rect {
+		fill: var(--red);
+	}
+
+	.playing .bars.fill {
+		filter: drop-shadow(0 0 4px rgb(227 38 63 / 0.6));
+	}
+
+	.time {
+		font-size: 0.75rem;
+		color: var(--text-muted);
+		min-width: 2.5rem;
+		text-align: right;
+	}
+
+	.pending {
+		margin: 0;
+		font-size: 0.78rem;
+		color: var(--text-dim);
+	}
+
+	.notes {
+		border-top: 1px dashed var(--border-hi);
+		padding-top: 0.75rem;
+		/* animate open/close in browsers that support it; others just snap */
+		interpolate-size: allow-keywords;
+	}
+
+	.notes::details-content {
+		block-size: 0;
+		overflow: hidden;
+		transition: block-size 0.25s ease, content-visibility 0.25s allow-discrete;
+	}
+
+	.notes[open]::details-content {
+		block-size: auto;
+	}
+
+	summary {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.8rem;
+		color: var(--purple-hi);
+		cursor: pointer;
+		list-style: none;
+		user-select: none;
+	}
+
+	summary::-webkit-details-marker {
+		display: none;
+	}
+
+	summary:hover {
+		color: var(--red-hi);
+	}
+
+	.chevron {
+		display: inline-block;
+		color: var(--red);
+		transition: transform 0.2s ease;
+	}
+
+	.notes[open] .chevron {
+		transform: rotate(90deg);
+	}
+
+	.label-open,
+	.notes[open] .label-closed {
+		display: none;
+	}
+
+	.notes[open] .label-open {
+		display: inline;
+	}
+
+	.notes-body {
+		max-width: none;
+		padding: 0.75rem 0 0 1rem;
+		margin-left: 0.2rem;
+		border-left: 1px solid var(--border-hi);
+		font-size: 0.95rem;
+		color: var(--text-muted);
+	}
+
+	.notes-body > :global(:first-child) {
+		margin-top: 0;
+	}
+
+	.notes-body > :global(:last-child) {
+		margin-bottom: 0;
+	}
+
+	.notes-body :global(h2),
+	.notes-body :global(h3) {
+		margin-top: 1.4em;
+		font-size: 1rem;
+		color: var(--text);
+	}
+</style>

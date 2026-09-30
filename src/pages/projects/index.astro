@@ -1,0 +1,21 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionHeading from '../../components/SectionHeading.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+import { getProjects } from '../../lib/content';
+
+const projects = await getProjects();
+---
+
+<BaseLayout title="Projects" description="Personal and academic projects.">
+	<section class="container section">
+		<SectionHeading as="h1" addr="0x10" title="projects" subtitle="Personal and academic projects." />
+		{projects.length === 0 ? (
+			<p class="muted mono">// no projects yet</p>
+		) : (
+			<div class="grid-cards">
+				{projects.map((p, i) => <ProjectCard project={p} index={i} />)}
+			</div>
+		)}
+	</section>
+</BaseLayout>

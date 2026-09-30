@@ -1,0 +1,37 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="404">
+	<section class="container section fault">
+		<p class="code mono">SIGSEGV</p>
+		<h1>Segmentation fault <span class="muted">(core dumped)</span></h1>
+		<pre><code>page fault at {Astro.url.pathname}
+  error_code: 0x0004 [user-mode read, page not present]
+  rip: 0x00007f3a1c0de404</code></pre>
+		<p class="muted">The address you requested isn't mapped.</p>
+		<a href="/" class="btn">return to 0x0000 (home)</a>
+	</section>
+</BaseLayout>
+
+<style>
+	.fault {
+		max-width: 46rem;
+	}
+
+	.code {
+		color: var(--red);
+		letter-spacing: 0.2em;
+		font-size: 0.85rem;
+		margin-bottom: 0.5rem;
+	}
+
+	h1 .muted {
+		font-size: 0.55em;
+	}
+
+	pre {
+		color: var(--text-muted);
+		margin: 1.5rem 0;
+	}
+</style>

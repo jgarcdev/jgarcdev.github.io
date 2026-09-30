@@ -1,0 +1,228 @@
+---
+interface Props {
+	label?: string;
+	sublabel?: string;
+}
+
+const { label = 'JG-64', sublabel = 'rev.A // 7nm' } = Astro.props;
+
+const SIZE = 480;
+const C = SIZE / 2;
+const CHIP = 150; // chip body width
+const CHIP_MIN = C - CHIP / 2;
+const PINS = 6;
+const PITCH = 22;
+
+const REACH = [
+	[38, 92, 56, 70, 104, 44],
+	[74, 50, 98, 40, 62, 88],
+	[52, 100, 46, 84, 58, 76],
+	[90, 42, 70, 102, 48, 60],
+];
+
+interface Trace {
+	d: string;
+	pad: [number, number];
+	delay: number;
+	dur: number;
+	hue: 'red' | 'purple';
+}
+
+const sides = REACH.map((reach, side) => {
+	const traces: Trace[] = [];
+	for (let i = 0; i < PINS; i++) {
+		const x = C + (i - (PINS - 1) / 2) * PITCH;
+		const y0 = CHIP_MIN - 6;
+		const spread = (i - (PINS - 1) / 2) * 18;
+		const y1 = y0 - 18;
+		const x2 = x + spread;
+		const y2 = y1 - Math.abs(spread);
+		const y3 = Math.max(18, y2 - reach[i]);
+		traces.push({
+			d: `M${x} ${y0} V${y1} L${x2} ${y2} V${y3}`,
+			pad: [x2, y3],
+			delay: ((side * PINS + i) * 0.37) % 4,
+			dur: 2.6 + ((i * 7 + side * 3) % 5) * 0.45,
+			hue: (i + side) % 2 === 0 ? 'red' : 'purple',
+		});
+	}
+	return { rotate: side * 90, traces };
+});
+
+const pinXs = Array.from({ length: PINS }, (_, i) => C + (i - (PINS - 1) / 2) * PITCH);
+
+const CELLS = 6;
+const DIE = 96;
+const DIE_MIN = C - DIE / 2;
+const cell = DIE / CELLS;
+const lit = new Set([2, 9, 15, 20, 26, 33]);
+---
+
+<svg class="board" viewBox={`0 0 ${SIZE} ${SIZE}`} role="img" aria-label="Illustration of a processor die with signal traces">
+	<defs>
+		<radialGradient id="cb-glow" cx="50%" cy="50%" r="50%">
+			<stop offset="0%" stop-color="#9d5cff" stop-opacity="0.28" />
+			<stop offset="55%" stop-color="#e3263f" stop-opacity="0.08" />
+			<stop offset="100%" stop-color="#07050a" stop-opacity="0" />
+		</radialGradient>
+		<linearGradient id="cb-die" x1="0" y1="0" x2="1" y2="1">
+			<stop offset="0%" stop-color="#2a1236" />
+			<stop offset="100%" stop-color="#140a1c" />
+		</linearGradient>
+		<filter id="cb-blur" x="-50%" y="-50%" width="200%" height="200%">
+			<feGaussianBlur stdDeviation="2.2" result="b" />
+			<feMerge>
+				<feMergeNode in="b" />
+				<feMergeNode in="SourceGraphic" />
+			</feMerge>
+		</filter>
+	</defs>
+
+	<circle cx={C} cy={C} r={C} fill="url(#cb-glow)" />
+
+	{sides.map(({ rotate, traces }) => (
+		<g transform={`rotate(${rotate} ${C} ${C})`}>
+			{traces.map((t) => (
+				<>
+					<path d={t.d} class="trace" />
+					<path
+						d={t.d}
+						class:list={['pulse', t.hue]}
+						pathLength="100"
+						filter="url(#cb-blur)"
+						style={`animation-delay:-${t.delay.toFixed(2)}s;animation-duration:${t.dur.toFixed(2)}s`}
+					/>
+					<circle cx={t.pad[0]} cy={t.pad[1]} r="4" class="pad" />
+					<circle cx={t.pad[0]} cy={t.pad[1]} r="1.6" class:list={['pad-core', t.hue]} />
+				</>
+			))}
+			{pinXs.map((x) => (
+				<rect x={x - 3} y={CHIP_MIN - 8} width="6" height="8" class="pin" />
+			))}
+		</g>
+	))}
+
+	<rect x={CHIP_MIN} y={CHIP_MIN} width={CHIP} height={CHIP} rx="6" class="chip" />
+	<rect x={CHIP_MIN + 8} y={CHIP_MIN + 8} width={CHIP - 16} height={CHIP - 16} rx="3" class="chip-inner" />
+	<circle cx={CHIP_MIN + 16} cy={CHIP_MIN + 16} r="3" class="notch" />
+
+	<g class="die">
+		<rect x={DIE_MIN} y={DIE_MIN - 10} width={DIE} height={DIE} fill="url(#cb-die)" class="die-body" />
+		{Array.from({ length: CELLS * CELLS }, (_, n) => (
+			<rect
+				x={DIE_MIN + (n % CELLS) * cell + 2}
+				y={DIE_MIN - 10 + Math.floor(n / CELLS) * cell + 2}
+				width={cell - 4}
+				height={cell - 4}
+				class:list={['cell', { lit: lit.has(n) }]}
+				style={lit.has(n) ? `animation-delay:${(n % 7) * 0.4}s` : undefined}
+			/>
+		))}
+	</g>
+	<text x={C} y={CHIP_MIN + CHIP - 26} class="label">{label}</text>
+	<text x={C} y={CHIP_MIN + CHIP - 13} class="sublabel">{sublabel}</text>
+</svg>
+
+<style>
+	.board {
+		width: 100%;
+		height: auto;
+		max-width: 30rem;
+		display: block;
+		overflow: visible;
+	}
+
+	.trace {
+		fill: none;
+		stroke: #2c1d38;
+		stroke-width: 2;
+		stroke-linejoin: round;
+	}
+
+	.pulse {
+		fill: none;
+		stroke-width: 2.5;
+		stroke-linecap: round;
+		stroke-dasharray: 7 93;
+		stroke-dashoffset: 100;
+		animation: signal linear infinite;
+	}
+
+	.pulse.red { stroke: var(--red-hi); }
+	.pulse.purple { stroke: var(--purple-hi); }
+
+	@keyframes signal {
+		from { stroke-dashoffset: 7; }
+		to { stroke-dashoffset: -93; }
+	}
+
+	.pad {
+		fill: var(--bg);
+		stroke: #4a2f5c;
+		stroke-width: 1.5;
+	}
+
+	.pad-core.red { fill: var(--red); }
+	.pad-core.purple { fill: var(--purple); }
+
+	.pin {
+		fill: #6b5a78;
+	}
+
+	.chip {
+		fill: #0d0911;
+		stroke: #3b2549;
+		stroke-width: 1.5;
+	}
+
+	.chip-inner {
+		fill: none;
+		stroke: #24172d;
+		stroke-dasharray: 2 3;
+	}
+
+	.notch {
+		fill: #24172d;
+	}
+
+	.die-body {
+		stroke: var(--purple-deep);
+	}
+
+	.cell {
+		fill: rgb(157 92 255 / 0.1);
+		stroke: rgb(157 92 255 / 0.18);
+		stroke-width: 0.5;
+	}
+
+	.cell.lit {
+		animation: flicker 3.2s ease-in-out infinite;
+	}
+
+	@keyframes flicker {
+		0%, 100% { fill: rgb(157 92 255 / 0.1); }
+		45% { fill: rgb(227 38 63 / 0.75); }
+	}
+
+	.label,
+	.sublabel {
+		font-family: var(--font-mono);
+		text-anchor: middle;
+	}
+
+	.label {
+		font-size: 11px;
+		fill: var(--text-muted);
+		letter-spacing: 0.15em;
+	}
+
+	.sublabel {
+		font-size: 7px;
+		fill: var(--text-dim);
+		letter-spacing: 0.08em;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.pulse { display: none; }
+	}
+</style>

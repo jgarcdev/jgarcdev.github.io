@@ -1,0 +1,15 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionHeading from '../../components/SectionHeading.astro';
+import PostList from '../../components/PostList.astro';
+import { getPosts } from '../../lib/content';
+
+const posts = await getPosts();
+---
+
+<BaseLayout title="Blog" description="Notes on personal projects, interests, experiences, and other relevant topics.">
+	<section class="container section">
+		<SectionHeading as="h1" addr="0x20" title="blog" subtitle="Notes on personal projects, interests, experiences, and other relevant topics." />
+		<PostList posts={posts} />
+	</section>
+</BaseLayout>

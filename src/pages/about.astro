@@ -1,0 +1,162 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import SocialLinks from '../components/SocialLinks.astro';
+import Icon from '../components/Icon.astro';
+import { SITE } from '../data/site';
+
+const interests = [
+	{ key: 'arch', desc: 'Memory management, instruction sets, and system design.' },
+	{ key: 'kernels', desc: 'Schedulers, virtual memory, drivers, and boot flows.' },
+	{ key: 'compilers', desc: 'IRs, register allocation, instruction selection, optimization passes.' },
+	{ key: 'music', desc: 'Composing for piano, ensembles, and orchestra.', href: '/music/' },
+];
+---
+
+<BaseLayout title="About" description={`About ${SITE.name}`}>
+	<section class="container section">
+		<SectionHeading as="h1" addr="0x00" title="about" />
+
+		<div class="grid">
+			<div class="prose">
+				<p>
+					Hi, I'm {SITE.name}. I recently graduated from The University of Texas at Austin with a B.S. in
+					Computer Science.
+				</p>
+				<p>
+					I'm drawn to the parts of computing most people never have to think about: how instructions flow
+					through a pipeline, how a kernel decides who runs next, how a compiler turns a loop into a handful of
+					vector instructions. I don't have professional experience in the field yet. Everything here comes from
+					coursework and projects I've built on my own time.
+				</p>
+				<p>
+					<strong>I'm looking for my first full-time role</strong>, ideally in systems software, operating
+					systems, compilers, or computer architecture. If not, I am open to other opportunities, as I love learning new things and widening my skillset.
+					If your team is hiring, I'd love to hear from you.
+				</p>
+				<p>
+					This site collects the things I build, notes from what I'm learning, and, on a different frequency,
+					the music I write.
+				</p>
+
+				<div class="actions">
+					<a href={SITE.resume} class="btn" download><Icon name="download" size={16} /> download resume</a>
+				</div>
+			</div>
+
+			<aside class="card mono" aria-label="Contact">
+				<dl class="status">
+					<div><dt>edu</dt><dd>{SITE.education}</dd></div>
+					<div><dt>status</dt><dd class="accent-red">{SITE.status}</dd></div>
+				</dl>
+				<p class="card-title">$ cat /etc/contact</p>
+				<SocialLinks showLabels />
+			</aside>
+		</div>
+	</section>
+
+	<section class="container section">
+		<SectionHeading addr="0x08" title="interests" />
+		<ul class="interests">
+			{interests.map((it, i) => (
+				<li>
+					<span class="bit mono">bit {i}</span>
+					<h3 class="mono">{it.href ? <a href={it.href}>{it.key}</a> : it.key}</h3>
+					<p class="muted">{it.desc}</p>
+				</li>
+			))}
+		</ul>
+	</section>
+</BaseLayout>
+
+<style>
+	.grid {
+		display: grid;
+		grid-template-columns: 1.6fr 1fr;
+		gap: 3rem;
+		align-items: start;
+	}
+
+	.prose p {
+		font-size: 1.1rem;
+	}
+
+	.actions {
+		margin-top: 2rem;
+	}
+
+	.card {
+		padding: 1.25rem;
+		background: var(--bg-elev);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+	}
+
+	.status {
+		margin: 0 0 1.5rem;
+		font-size: 0.8rem;
+	}
+
+	.status div {
+		padding: 0.4rem 0;
+		border-bottom: 1px dashed var(--border);
+	}
+
+	.status dt {
+		color: var(--purple);
+	}
+
+	.status dd {
+		margin: 0;
+		color: var(--text-muted);
+	}
+
+	.card-title {
+		font-size: 0.85rem;
+		color: var(--red);
+	}
+
+	.card :global(.social) {
+		flex-direction: column;
+	}
+
+	.card :global(.social a) {
+		width: 100%;
+	}
+
+	.interests {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+		gap: 1px;
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		background: var(--border);
+		border: 1px solid var(--border);
+	}
+
+	.interests li {
+		padding: 1.25rem;
+		background: var(--bg);
+	}
+
+	.bit {
+		font-size: 0.7rem;
+		color: var(--purple);
+	}
+
+	.interests h3 {
+		margin: 0.25rem 0 0.5rem;
+	}
+
+	.interests p {
+		margin: 0;
+		font-size: 0.95rem;
+	}
+
+	@media (max-width: 48rem) {
+		.grid {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

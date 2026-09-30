@@ -1,0 +1,118 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+	project: CollectionEntry<'projects'>;
+	index?: number;
+}
+
+const { project, index = 0 } = Astro.props;
+const { title, description, stack, repo, demo, featured } = project.data;
+const reg = `${index.toString().padStart(2, '0')}`;
+---
+
+<article class="card">
+	<header class="card-head mono">
+		<span class="reg">x{reg}</span>
+		{featured && <span class="flag">FEATURED</span>}
+	</header>
+	<h3><a href={`/projects/${project.id}/`} class="stretched">{title}</a></h3>
+	<p class="muted">{description}</p>
+	{stack.length > 0 && (
+		<ul class="tag-list">
+			{stack.map((s) => <li class="tag">{s}</li>)}
+		</ul>
+	)}
+	{(repo || demo) && (
+		<footer class="links mono">
+			{repo && <a href={repo} target="_blank" rel="noopener noreferrer">src</a>}
+			{demo && <a href={demo} target="_blank" rel="noopener noreferrer">demo</a>}
+		</footer>
+	)}
+</article>
+
+<style>
+	.card {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		padding: 1.25rem 1.25rem 1.1rem;
+		background: linear-gradient(180deg, var(--surface) 0%, var(--bg-elev) 100%);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+	}
+
+	.card::before,
+	.card::after {
+		content: '';
+		position: absolute;
+		width: 10px;
+		height: 10px;
+		border: 1px solid var(--red);
+		opacity: 0;
+		transition: opacity 0.2s ease;
+	}
+
+	.card::before { top: -1px; left: -1px; border-right: 0; border-bottom: 0; }
+	.card::after { bottom: -1px; right: -1px; border-left: 0; border-top: 0; }
+
+	.card:hover {
+		border-color: var(--border-hi);
+		transform: translateY(-2px);
+		box-shadow: 0 10px 30px -12px rgb(157 92 255 / 0.35);
+	}
+
+	.card:hover::before,
+	.card:hover::after {
+		opacity: 1;
+	}
+
+	.card-head {
+		display: flex;
+		justify-content: space-between;
+		font-size: 0.72rem;
+	}
+
+	.reg { color: var(--red); }
+
+	.flag {
+		color: var(--purple-hi);
+		letter-spacing: 0.1em;
+	}
+
+	h3 {
+		margin: 0;
+	}
+
+	h3 a {
+		color: var(--text);
+	}
+
+	.stretched::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+	}
+
+	p {
+		margin: 0;
+		font-size: 0.95rem;
+	}
+
+	.links {
+		position: relative;
+		z-index: 1;
+		display: flex;
+		gap: 1rem;
+		margin-top: auto;
+		padding-top: 0.5rem;
+		font-size: 0.8rem;
+	}
+
+	.links a::before {
+		content: '> ';
+		color: var(--text-dim);
+	}
+</style>

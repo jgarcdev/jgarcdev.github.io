@@ -1,0 +1,64 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import { formatDate } from '../lib/content';
+
+interface Props {
+	title: string;
+	description: string;
+	date?: Date;
+	updated?: Date;
+	tags?: string[];
+	back: { href: string; label: string };
+}
+
+const { title, description, date, updated, tags = [], back } = Astro.props;
+---
+
+<BaseLayout title={title} description={description}>
+	<article class="container section entry">
+		<a href={back.href} class="back mono">&larr; {back.label}</a>
+		<header>
+			{date && (
+				<p class="meta mono">
+					<time datetime={date.toISOString()}>{formatDate(date)}</time>
+					{updated && <span> · updated {formatDate(updated)}</span>}
+				</p>
+			)}
+			<h1>{title}</h1>
+			<p class="lede muted">{description}</p>
+			{tags.length > 0 && (
+				<ul class="tag-list">
+					{tags.map((t) => <li class="tag">{t}</li>)}
+				</ul>
+			)}
+			<slot name="header-extra" />
+		</header>
+		<hr />
+		<div class="prose">
+			<slot />
+		</div>
+	</article>
+</BaseLayout>
+
+<style>
+	.entry {
+		max-width: 52rem;
+	}
+
+	.back {
+		display: inline-block;
+		margin-bottom: 2rem;
+		font-size: 0.85rem;
+	}
+
+	.meta {
+		font-size: 0.8rem;
+		color: var(--red);
+		margin-bottom: 0.75rem;
+	}
+
+	.lede {
+		font-size: 1.15rem;
+		max-width: 60ch;
+	}
+</style>

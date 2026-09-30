@@ -1,0 +1,156 @@
+---
+import { NAV, SITE } from '../data/site';
+import Icon from './Icon.astro';
+
+const path = Astro.url.pathname;
+const trim = (p: string) => p.replace(/\/+$/, '');
+const isActive = (href: string) => trim(path) === trim(href) || path.startsWith(href);
+---
+
+<header class="site-header">
+	<div class="container bar">
+		<a href="/" class="brand mono" aria-label="Home">
+			<span class="prompt">{SITE.handle}@aruxi</span><span class="muted">:</span><span class="accent-purple">~</span><span class="muted">$</span><span class="cursor" aria-hidden="true"></span>
+		</a>
+
+		<nav aria-label="Primary">
+			<ul>
+				{NAV.map((item) => (
+					<li>
+						<a href={item.href} class:list={['nav-link', { active: isActive(item.href) }]} aria-current={isActive(item.href) ? 'page' : undefined}>
+							<span class="addr">{item.addr}</span>
+							<span>{item.label}</span>
+						</a>
+					</li>
+				))}
+				<li>
+					<a href={SITE.resume} class="nav-link resume" download>
+						<Icon name="download" size={14} />
+						<span>resume.pdf</span>
+					</a>
+				</li>
+			</ul>
+		</nav>
+	</div>
+</header>
+
+<style>
+	.site-header {
+		position: sticky;
+		top: 0;
+		z-index: 50;
+		background: rgb(7 5 10 / 0.82);
+		backdrop-filter: blur(10px);
+		border-bottom: 1px solid var(--border);
+	}
+
+	.site-header::after {
+		content: '';
+		position: absolute;
+		inset: auto 0 -1px 0;
+		height: 1px;
+		background: var(--gradient-signal);
+		opacity: 0.5;
+	}
+
+	.bar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		min-height: 3.75rem;
+		flex-wrap: wrap;
+	}
+
+	.brand {
+		font-size: 0.95rem;
+		color: var(--text);
+		display: inline-flex;
+		align-items: center;
+		white-space: nowrap;
+	}
+
+	.brand:hover {
+		text-shadow: none;
+		color: var(--text);
+	}
+
+	.prompt {
+		color: var(--red);
+	}
+
+	.cursor {
+		display: inline-block;
+		width: 0.55em;
+		height: 1.05em;
+		margin-left: 0.3em;
+		background: var(--red);
+		animation: blink 1.1s steps(1) infinite;
+	}
+
+	@keyframes blink {
+		50% { opacity: 0; }
+	}
+
+	nav ul {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.25rem;
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.nav-link {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0.35rem 0.6rem;
+		font-family: var(--font-mono);
+		font-size: 0.85rem;
+		color: var(--text-muted);
+		border: 1px solid transparent;
+		border-radius: var(--radius);
+	}
+
+	.nav-link:hover {
+		color: var(--text);
+		border-color: var(--border-hi);
+		text-shadow: none;
+	}
+
+	.addr {
+		font-size: 0.7rem;
+		color: var(--text-dim);
+	}
+
+	.nav-link.active {
+		color: var(--text);
+		border-color: var(--red-deep);
+		background: rgb(227 38 63 / 0.08);
+	}
+
+	.nav-link.active .addr {
+		color: var(--red);
+	}
+
+	.resume {
+		color: var(--purple-hi);
+		border-color: var(--purple-deep);
+	}
+
+	.resume:hover {
+		border-color: var(--purple);
+		box-shadow: var(--glow-purple);
+	}
+
+	@media (max-width: 40rem) {
+		.bar {
+			padding-block: 0.6rem;
+		}
+
+		.addr {
+			display: none;
+		}
+	}
+</style>

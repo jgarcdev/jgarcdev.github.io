@@ -1,0 +1,32 @@
+---
+import { render } from 'astro:content';
+import EntryLayout from '../../layouts/EntryLayout.astro';
+import { getProjects } from '../../lib/content';
+
+export async function getStaticPaths() {
+	const projects = await getProjects();
+	return projects.map((project) => ({ params: { slug: project.id }, props: { project } }));
+}
+
+const { project } = Astro.props;
+const { Content } = await render(project);
+const { title, description, date, stack, repo, demo } = project.data;
+---
+
+<EntryLayout title={title} description={description} date={date} tags={stack} back={{ href: '/projects/', label: 'projects' }}>
+	{(repo || demo) && (
+		<p slot="header-extra" class="links mono">
+			{repo && <a href={repo} class="btn btn--ghost" target="_blank" rel="noopener noreferrer">view source</a>}
+			{demo && <a href={demo} class="btn" target="_blank" rel="noopener noreferrer">live demo</a>}
+		</p>
+	)}
+	<Content />
+</EntryLayout>
+
+<style>
+	.links {
+		display: flex;
+		gap: 0.75rem;
+		margin-top: 1.5rem;
+	}
+</style>

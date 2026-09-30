@@ -1,0 +1,36 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import CompositionCard from '../components/CompositionCard.astro';
+import { getCompositions } from '../lib/content';
+
+const pieces = await getCompositions();
+const sortedPieces = [...pieces].sort((a, b) => a.data.date.valueOf() - b.data.date.valueOf() || a.data.title.localeCompare(b.data.title));
+---
+
+<BaseLayout title="Music" description="Original compositions and previews.">
+	<section class="container section">
+		<SectionHeading
+			as="h1"
+			addr="0x30"
+			title="music"
+			subtitle="Composition is my other low-level work: voicing, counterpoint, and timing down to the sixteenth note. Previews below."
+		/>
+		{pieces.length === 0 ? (
+			<p class="muted mono">// no compositions yet</p>
+		) : (
+			<div class="pieces">
+				{sortedPieces.map((piece) => <CompositionCard piece={piece} />)}
+			</div>
+		)}
+	</section>
+</BaseLayout>
+
+<style>
+	.pieces {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 26rem), 1fr));
+		gap: 1.25rem;
+		align-items: start;
+	}
+</style>

@@ -1,0 +1,63 @@
+---
+import { SITE } from '../data/site';
+import SocialLinks from './SocialLinks.astro';
+
+const year = new Date().getFullYear();
+const bytes = Array.from(new TextEncoder().encode(`${SITE.handle}.aruxi`));
+const hexdump = bytes.map((b) => b.toString(16).padStart(2, '0')).join(' ');
+---
+
+<footer class="site-footer">
+	<div class="container inner">
+		<div class="dump mono" aria-hidden="true">
+			<span class="off">00000000</span>
+			<span class="hex">{hexdump}</span>
+			<span class="ascii">|{SITE.handle}.aruxi|</span>
+		</div>
+		<div class="row">
+			<p class="mono muted small">
+				&copy; {year} {SITE.name} <span class="accent-red">//</span> built with Astro, halted cleanly.
+			</p>
+			<SocialLinks />
+		</div>
+	</div>
+</footer>
+
+<style>
+	.site-footer {
+		margin-top: 4rem;
+		border-top: 1px solid var(--border);
+		background: var(--bg-elev);
+	}
+
+	.inner {
+		padding-block: 2rem;
+	}
+
+	.dump {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0 1.25rem;
+		font-size: 0.75rem;
+		color: var(--text-dim);
+		margin-bottom: 1.25rem;
+		overflow-wrap: anywhere;
+	}
+
+	.off { color: var(--purple-deep); }
+	.hex { color: var(--text-dim); }
+	.ascii { color: var(--red-deep); }
+
+	.row {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 1rem;
+		align-items: center;
+		justify-content: space-between;
+	}
+
+	.small {
+		font-size: 0.8rem;
+		margin: 0;
+	}
+</style>

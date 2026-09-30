@@ -1,0 +1,74 @@
+---
+interface Props {
+	addr: string;
+	title: string;
+	subtitle?: string;
+	as?: 'h1' | 'h2';
+	href?: string;
+	linkLabel?: string;
+}
+
+const { addr, title, subtitle, as: Tag = 'h2', href, linkLabel = 'view all' } = Astro.props;
+---
+
+<div class="heading">
+	<div class="row">
+		<Tag class="title">
+			<span class="addr">[{addr}]</span>
+			<span class="dot">.</span>{title}
+		</Tag>
+		<span class="rule" aria-hidden="true"></span>
+		{href && (
+			<a href={href} class="more mono">
+				{linkLabel} &rarr;
+			</a>
+		)}
+	</div>
+	{subtitle && <p class="subtitle muted">{subtitle}</p>}
+</div>
+
+<style>
+	.heading {
+		margin-bottom: 2rem;
+	}
+
+	.row {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+	}
+
+	.title {
+		margin: 0;
+		white-space: nowrap;
+	}
+
+	.addr {
+		font-size: 0.55em;
+		color: var(--red);
+		vertical-align: middle;
+		margin-right: 0.4em;
+		letter-spacing: 0.05em;
+	}
+
+	.dot {
+		color: var(--purple);
+	}
+
+	.rule {
+		flex: 1;
+		height: 1px;
+		min-width: 2rem;
+		background: linear-gradient(90deg, var(--border-hi), transparent);
+	}
+
+	.more {
+		font-size: 0.85rem;
+		white-space: nowrap;
+	}
+
+	.subtitle {
+		margin: 0.6rem 0 0;
+		max-width: 60ch;
+	}
+</style>

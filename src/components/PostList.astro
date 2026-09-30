@@ -1,0 +1,91 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { formatDate, hexDate } from '../lib/content';
+
+interface Props {
+	posts: CollectionEntry<'blog'>[];
+}
+
+const { posts } = Astro.props;
+---
+
+{posts.length === 0 ? (
+	<p class="muted mono">// no entries yet</p>
+) : (
+	<ol class="posts">
+		{posts.map((post) => (
+			<li>
+				<a href={`/blog/${post.id}/`} class="post">
+					<time datetime={post.data.pubDate.toISOString()} class="mono" title={formatDate(post.data.pubDate)}>
+						{hexDate(post.data.pubDate)}
+					</time>
+					<div>
+						<h3>
+							{post.data.title}
+							{post.data.draft && <span class="draft mono">[draft]</span>}
+						</h3>
+						<p class="muted">{post.data.description}</p>
+					</div>
+				</a>
+			</li>
+		))}
+	</ol>
+)}
+
+<style>
+	.posts {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		border-top: 1px solid var(--border);
+	}
+
+	.post {
+		display: grid;
+		grid-template-columns: 9.5rem 1fr;
+		gap: 1.25rem;
+		padding: 1.1rem 0.75rem;
+		border-bottom: 1px solid var(--border);
+		color: var(--text);
+		transition: background 0.15s ease;
+	}
+
+	.post:hover {
+		background: linear-gradient(90deg, rgb(227 38 63 / 0.08), transparent 70%);
+		color: var(--text);
+		text-shadow: none;
+	}
+
+	time {
+		font-size: 0.8rem;
+		color: var(--red);
+		padding-top: 0.2rem;
+	}
+
+	h3 {
+		margin: 0 0 0.3rem;
+		font-size: 1.05rem;
+	}
+
+	.post:hover h3 {
+		color: var(--purple-hi);
+	}
+
+	p {
+		margin: 0;
+		font-size: 0.95rem;
+	}
+
+	.draft {
+		font-size: 0.7rem;
+		color: var(--text-dim);
+		margin-left: 0.5rem;
+	}
+
+	@media (max-width: 36rem) {
+		.post {
+			grid-template-columns: 1fr;
+			gap: 0.25rem;
+		}
+	}
+</style>

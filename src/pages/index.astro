@@ -1,29 +1,270 @@
 ---
-import TerminalTabs from '../components/TerminalTabs.astro';
----
-<TerminalTabs activeTab="Home">
-	<meta charset="UTF-8">
-  <div>
-    <h1 style="color:#b0120f;font-family:'Fira Mono',monospace;font-size:2rem;margin-bottom:1rem;">jgarcia:~$</h1>
-    <p style="font-family:'Fira Mono',monospace;font-size:1.2rem;">Welcome to my terminal-inspired portfolio!<br />
-    Use the tabs above to explore my <span style="color:#b0120f">Projects</span>, <span style="color:#b0120f">Blog</span>, and <span style="color:#b0120f">Resume</span>.<br />
-    <br />
-    <!-- <span style="color:#888;">Tip: Try scrolling, the scrollbar is styled like a terminal app.</span> -->
-    </p>
+import BaseLayout from '../layouts/BaseLayout.astro';
+import CircuitBoard from '../components/CircuitBoard.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import PostList from '../components/PostList.astro';
+import CompositionCard from '../components/CompositionCard.astro';
+import SocialLinks from '../components/SocialLinks.astro';
+import Icon from '../components/Icon.astro';
+import { SITE } from '../data/site';
+import { getCompositions, getPosts, getProjects } from '../lib/content';
 
-		Hi
-		# new line <br>
-		# new line <br>
-		# new line <br>
-		# new line <br>
-		# new line <br>
-		# new line <br>
-		# new line <br>
-		# new line <br>
-		# new line <br>
-		# new line <br>
-		# new line <br>
-		# new line <br>
-		# new line <br>
-  </div>
-</TerminalTabs>
+const projects = (await getProjects()).slice(0, 3);
+const posts = (await getPosts()).slice(0, 3);
+const pieces = (await getCompositions()).slice(0, 2);
+
+const bootLog = [
+	['0.000000', `Booting ${SITE.handle} kernel...`],
+	['0.001337', 'cpu0: interests = { arch, os, compilers }'],
+	['0.002048', 'edu: B.S. CS, UT Austin ... done'],
+	['0.004096', 'job_search: looking for first role ... active'],
+	['0.008192', 'init: welcome, visitor.'],
+];
+---
+
+<BaseLayout>
+	<section class="hero container">
+		<div class="hero-text">
+			<div class="boot mono" aria-hidden="true">
+				{bootLog.map(([t, msg], i) => (
+					<span class="line" style={`animation-delay:${i * 0.35}s`}><span class="ts">[{t.padStart(12, ' ')}]</span> {msg}</span>
+				))}
+			</div>
+
+			<p class="status mono"><span class="led" aria-hidden="true"></span>{SITE.status}</p>
+			<h1>
+				<span class="hello mono">Hello World, I'm</span>
+				<span class="name">{SITE.name}</span>
+			</h1>
+			<p class="tagline">
+				I just finished my B.S. in Computer Science at UT Austin. I'm drawn to
+				<span class="hl-red"> computer architecture</span>, <span class="hl-purple">operating systems</span>, and
+				<span class="hl-red"> compilers</span>, and I'm looking for my first job working on them.
+			</p>
+
+			<div class="cta">
+				<a href="/projects/" class="btn">./projects</a>
+				<a href={SITE.resume} class="btn btn--ghost" download>
+					<Icon name="download" size={16} /> resume.pdf
+				</a>
+			</div>
+			<SocialLinks />
+		</div>
+
+		<div class="hero-art">
+			<CircuitBoard />
+		</div>
+	</section>
+
+	<section class="section container" id="about">
+		<SectionHeading addr="0x00" title="about" href="/about/" linkLabel="more" />
+		<div class="about-grid">
+			<p class="about-text">
+				I recently graduated from UT Austin with a B.S. in Computer Science. I don't have industry experience yet.
+				What I do have is coursework and personal projects that vary in concepts from architecture to games.
+				I'm looking for an entry-level role where I can keep learning at that level.
+				Even though I want to specialize in low-level systems, I am open to other areas and interested in learning more and exciting things.
+				Outside of that, I write music and play games.
+			</p>
+			<dl class="specs mono">
+				<div><dt>edu</dt><dd>B.S. CS · UT Austin</dd></div>
+				<div><dt>status</dt><dd class="accent-red">seeking first role</dd></div>
+				<div><dt>focus</dt><dd>OS · compilers · arch</dd></div>
+				<div><dt>langs</dt><dd>C · Zig · Python · asm · Java · JavaScript</dd></div>
+				<div><dt>i/o</dt><dd>piano · composition</dd></div>
+			</dl>
+		</div>
+	</section>
+
+	<section class="section container">
+		<SectionHeading addr="0x10" title="projects" href="/projects/" />
+		<div class="grid-cards">
+			{projects.map((p, i) => <ProjectCard project={p} index={i} />)}
+		</div>
+	</section>
+
+	<section class="section container">
+		<SectionHeading addr="0x20" title="blog" href="/blog/" />
+		<PostList posts={posts} />
+	</section>
+
+	<section class="section container">
+		<SectionHeading
+			addr="0x30"
+			title="music"
+			href="/music/"
+			subtitle="When I'm not reading disassembly, I compose. Some selections:"
+		/>
+		<div class="pieces">
+			{pieces.map((piece) => <CompositionCard piece={piece} />)}
+		</div>
+	</section>
+</BaseLayout>
+
+<style>
+	.hero {
+		display: grid;
+		grid-template-columns: 1.15fr 1fr;
+		align-items: center;
+		gap: 2rem;
+		padding-block: clamp(3rem, 9vw, 6.5rem);
+	}
+
+	.boot {
+		margin: 0 0 1.75rem;
+		font-size: 0.78rem;
+		line-height: 1.7;
+		color: var(--text-dim);
+	}
+
+	.boot .line {
+		display: block;
+		white-space: pre-wrap;
+		opacity: 0;
+		animation: boot-in 0.25s steps(2) forwards;
+	}
+
+	.boot .ts {
+		color: var(--purple-deep);
+	}
+
+	@keyframes boot-in {
+		to { opacity: 1; }
+	}
+
+	.status {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.6rem;
+		margin: 0 0 1.25rem;
+		padding: 0.35rem 0.75rem;
+		font-size: 0.78rem;
+		color: var(--text);
+		border: 1px solid var(--red-deep);
+		border-radius: 999px;
+		background: rgb(227 38 63 / 0.08);
+	}
+
+	.led {
+		width: 0.5rem;
+		height: 0.5rem;
+		border-radius: 50%;
+		background: var(--red-hi);
+		box-shadow: var(--glow-red);
+		animation: pulse-led 1.8s ease-in-out infinite;
+	}
+
+	@keyframes pulse-led {
+		50% { opacity: 0.35; }
+	}
+
+	h1 {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		margin-bottom: 1.25rem;
+	}
+
+	.hello {
+		font-size: 1rem;
+		font-weight: 400;
+		color: var(--red);
+	}
+
+	.name {
+		background: linear-gradient(100deg, var(--text) 30%, var(--purple-hi) 70%, var(--red-hi) 100%);
+		-webkit-background-clip: text;
+		background-clip: text;
+		color: transparent;
+	}
+
+	.tagline {
+		font-size: 1.15rem;
+		color: var(--text-muted);
+		max-width: 38rem;
+	}
+
+	.hl-red { color: var(--red-hi); }
+	.hl-purple { color: var(--purple-hi); }
+
+	.cta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+		margin: 2rem 0 1.5rem;
+	}
+
+	.hero-art {
+		display: flex;
+		justify-content: center;
+	}
+
+	.about-grid {
+		display: grid;
+		grid-template-columns: 1.4fr 1fr;
+		gap: 2.5rem;
+		align-items: start;
+	}
+
+	.about-text {
+		font-size: 1.1rem;
+		max-width: 60ch;
+	}
+
+	.specs {
+		margin: 0;
+		padding: 1rem 1.25rem;
+		background: var(--bg-elev);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		font-size: 0.85rem;
+	}
+
+	.specs div {
+		display: grid;
+		grid-template-columns: 5rem 1fr;
+		padding: 0.3rem 0;
+		border-bottom: 1px dashed var(--border);
+	}
+
+	.specs div:last-child {
+		border-bottom: 0;
+	}
+
+	.specs dt {
+		color: var(--red);
+	}
+
+	.specs dt::after {
+		content: ':';
+		color: var(--text-dim);
+	}
+
+	.specs dd {
+		margin: 0;
+		color: var(--text-muted);
+	}
+
+	.pieces {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
+		gap: 1.25rem;
+		align-items: start;
+	}
+
+	@media (max-width: 56rem) {
+		.hero,
+		.about-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.hero-art {
+			order: -1;
+		}
+
+		.hero-art :global(.board) {
+			max-width: 18rem;
+		}
+	}
+</style>
